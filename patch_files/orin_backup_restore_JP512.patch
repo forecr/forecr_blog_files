@@ -3,11 +3,43 @@ index 0dac7ea..52f2cf1 100755
 --- a/tools/backup_restore/nvbackup_partitions.sh
 +++ b/tools/backup_restore/nvbackup_partitions.sh
 @@ -115,7 +115,7 @@ isext4() {
-		return 1;
-	fi
-	local result
+ 		return 1;
+ 	fi
+ 	local result
 -	result="$( blkid "/dev/${1}" | awk '{ print $3 }' | sed -n 's|TYPE="\(.*\)"|\1|p' )"
 +	result="$( blkid -o value -s TYPE "/dev/${1}" )"
-	if [ "${result}" = "ext4" ]; then
-		echo "true"
-	else
+ 	if [ "${result}" = "ext4" ]; then
+ 		echo "true"
+ 	else
+diff --git a/tools/backup_restore/nvrestore_partitions.sh b/tools/backup_restore/nvrestore_partitions.sh
+index 2fd28eb..23c354a 100755
+--- a/tools/backup_restore/nvrestore_partitions.sh
++++ b/tools/backup_restore/nvrestore_partitions.sh
+@@ -302,10 +302,25 @@ for value in $(grep -v -e '(^ *$|^#)' < "${FILE_NAME}"); do
+ 			echo "${SCRIPT_NAME} Checksum of ${FIELDS[2]} does not match the checksum in the index file."
+ 			exit 1
+ 		fi
+-		# partx delete must be called before flashing, and partx add after flashing.
+-		partx -d "/dev/${INTERNAL_STORAGE_DEVICE}"
++		# Delete previous GPT if it exists.
++		if partx -s "/dev/${INTERNAL_STORAGE_DEVICE}" >/dev/null 2>&1; then
++			# If the disk does not have any partition in it, create an EXT4 partition to delete
++			if [[ "$(ls /dev/${INTERNAL_STORAGE_DEVICE}* | grep -c /dev/${INTERNAL_STORAGE_DEVICE})" -eq 1 ]]; then
++				echo "/dev/${INTERNAL_STORAGE_DEVICE} does not have any partitions in it. Creating an ext4 partition to delete"
++				printf "o\nn\np\n1\n\n\nw\n" | fdisk "/dev/${INTERNAL_STORAGE_DEVICE}"
++				mkfs.ext4 -F "/dev/${INTERNAL_STORAGE_DEVICE}p1"
++			fi
++
++			partx -d "/dev/${INTERNAL_STORAGE_DEVICE}"
++		fi
++		# Flash GPT image, refresh and validate.
+ 		dd if="${FIELDS[1]}" of="/dev/${INTERNAL_STORAGE_DEVICE}"
++		sync
+ 		partx -v -a "/dev/${INTERNAL_STORAGE_DEVICE}"
++		if ! partx -s "/dev/${INTERNAL_STORAGE_DEVICE}" >/dev/null 2>&1; then
++			echo "Error: GPT does not exist on the /dev/${INTERNAL_STORAGE_DEVICE}"
++			exit 1
++		fi
+ 		GPT_EXISTS=true
+ 		break
+ 	fi

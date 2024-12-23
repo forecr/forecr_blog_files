@@ -1,13 +1,31 @@
 diff --git a/tools/backup_restore/nvbackup_partitions.sh b/tools/backup_restore/nvbackup_partitions.sh
-index 0dac7ea..52f2cf1 100755
+index 2a36ff2..1e3f4d7 100755
 --- a/tools/backup_restore/nvbackup_partitions.sh
 +++ b/tools/backup_restore/nvbackup_partitions.sh
 @@ -118,7 +118,7 @@ isext4() {
-		return 1;
-	fi
-	local result
+ 		return 1;
+ 	fi
+ 	local result
 -	result="$( blkid "/dev/${1}" | awk '{ print $3 }' | sed -n 's|TYPE="\(.*\)"|\1|p' )"
 +	result="$( blkid -o value -s TYPE "/dev/${1}" )"
-	if [ "${result}" = "ext4" ]; then
-		echo "true"
-	else
+ 	if [ "${result}" = "ext4" ]; then
+ 		echo "true"
+ 	else
+diff --git a/tools/backup_restore/nvrestore_partitions.sh b/tools/backup_restore/nvrestore_partitions.sh
+index 5c045b0..ab7b066 100755
+--- a/tools/backup_restore/nvrestore_partitions.sh
++++ b/tools/backup_restore/nvrestore_partitions.sh
+@@ -306,6 +306,13 @@ for value in $(grep -v -e '(^ *$|^#)' < "${FILE_NAME}"); do
+ 		fi
+ 		# Delete previous GPT if it exists.
+ 		if partx -s "/dev/${INTERNAL_STORAGE_DEVICE}" >/dev/null 2>&1; then
++			# If the disk does not have any partition in it, create an EXT4 partition to delete
++			if [[ "$(ls /dev/${INTERNAL_STORAGE_DEVICE}* | grep -c /dev/${INTERNAL_STORAGE_DEVICE})" -eq 1 ]]; then
++				echo "/dev/${INTERNAL_STORAGE_DEVICE} does not have any partitions in it. Creating an ext4 partition to delete"
++				printf "o\nn\np\n1\n\n\nw\n" | fdisk "/dev/${INTERNAL_STORAGE_DEVICE}"
++				mkfs.ext4 -F "/dev/${INTERNAL_STORAGE_DEVICE}p1"
++			fi
++
+ 			partx -d "/dev/${INTERNAL_STORAGE_DEVICE}"
+ 		fi
+ 		# Flash GPT image, refresh and validate.

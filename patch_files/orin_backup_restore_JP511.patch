@@ -58,7 +58,7 @@ index b913960..c11b86c 100755
  	boot1size=$( cat "/sys/block/${BOOT_1_NAME}/size" )
  	dd if="/dev/${BOOT_1_NAME}" of="${LDK_DIR}/${boot1_img}" status=progress
 diff --git a/tools/backup_restore/nvrestore_partitions.sh b/tools/backup_restore/nvrestore_partitions.sh
-index c7dfe60..5cc3299 100755
+index c7dfe60..7f2601c 100755
 --- a/tools/backup_restore/nvrestore_partitions.sh
 +++ b/tools/backup_restore/nvrestore_partitions.sh
 @@ -49,7 +49,7 @@ TMP_MOUNT="/tmp/mnt"
@@ -86,7 +86,7 @@ index c7dfe60..5cc3299 100755
  	fi
  
  }
-@@ -300,10 +300,18 @@ for value in $(grep -v -e '(^ *$|^#)' < "${FILE_NAME}"); do
+@@ -300,10 +300,25 @@ for value in $(grep -v -e '(^ *$|^#)' < "${FILE_NAME}"); do
  			echo "${SCRIPT_NAME} Checksum of ${FIELDS[2]} does not match the checksum in the index file."
  			exit 1
  		fi
@@ -94,6 +94,13 @@ index c7dfe60..5cc3299 100755
 -		partx -d "/dev/${INTERNAL_STORAGE_DEVICE}"
 +		# Delete previous GPT if it exists.
 +		if partx -s "/dev/${INTERNAL_STORAGE_DEVICE}" >/dev/null 2>&1; then
++			# If the disk does not have any partition in it, create an EXT4 partition to delete
++			if [[ "$(ls /dev/${INTERNAL_STORAGE_DEVICE}* | grep -c /dev/${INTERNAL_STORAGE_DEVICE})" -eq 1 ]]; then
++				echo "/dev/${INTERNAL_STORAGE_DEVICE} does not have any partitions in it. Creating an ext4 partition to delete"
++				printf "o\nn\np\n1\n\n\nw\n" | fdisk "/dev/${INTERNAL_STORAGE_DEVICE}"
++				mkfs.ext4 -F "/dev/${INTERNAL_STORAGE_DEVICE}p1"
++			fi
++
 +			partx -d "/dev/${INTERNAL_STORAGE_DEVICE}"
 +		fi
 +		# Flash GPT image, refresh and validate.
@@ -107,7 +114,7 @@ index c7dfe60..5cc3299 100755
  		GPT_EXISTS=true
  		break
  	fi
-@@ -315,12 +323,12 @@ if [ ${GPT_EXISTS} != true ]; then
+@@ -315,12 +330,12 @@ if [ ${GPT_EXISTS} != true ]; then
  	exit 1
  fi
  
@@ -125,7 +132,7 @@ index c7dfe60..5cc3299 100755
  fi
  
  restore_non_qspi()
-@@ -353,7 +361,7 @@ restore_non_qspi()
+@@ -353,7 +368,7 @@ restore_non_qspi()
  				echo "${SCRIPT_NAME} Checksum of ${FIELDS[2]} does not match the checksum in the index file."
  				exit
  			fi
@@ -134,7 +141,7 @@ index c7dfe60..5cc3299 100755
  				dd if="${FIELDS[1]}" of="/dev/${FIELDS[2]}" bs=512 seek=$((FIELDS[3])) count=$((FIELDS[4]))
  			else
  				gzip -c -S img -d "${FIELDS[1]}" | dd of="/dev/${FIELDS[2]}" bs=512 seek=$((FIELDS[3])) count=$((FIELDS[4]))
-@@ -406,7 +414,7 @@ fi
+@@ -406,7 +421,7 @@ fi
  
  
  
