@@ -1,0 +1,13 @@
+diff --git a/tools/backup_restore/nvbackup_partitions.sh b/tools/backup_restore/nvbackup_partitions.sh
+index 117f2e9..228fd40 100755
+--- a/tools/backup_restore/nvbackup_partitions.sh
++++ b/tools/backup_restore/nvbackup_partitions.sh
+@@ -118,7 +118,7 @@ isext4() {
+ 		return 1;
+ 	fi
+ 	local result
+-	result="$( blkid "/dev/${1}" | awk '{ print $3 }' | sed -n 's|TYPE="\(.*\)"|\1|p' )"
++	result="$( blkid -o value -s TYPE "/dev/${1}" )"
+ 	if [ "${result}" = "ext4" ]; then
+ 		echo "true"
+ 	else
