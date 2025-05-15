@@ -1,0 +1,21 @@
+diff --git a/tools/backup_restore/nvrestore_partitions.sh b/tools/backup_restore/nvrestore_partitions.sh
+index 23c354a..013c92a 100755
+--- a/tools/backup_restore/nvrestore_partitions.sh
++++ b/tools/backup_restore/nvrestore_partitions.sh
+@@ -283,11 +283,11 @@ for value in $(grep -v -e '(^ *$|^#)' < "${FILE_NAME}"); do
+ 		fi
+ 	fi
+ done
+-if [ ${BOARD_MATCH} = false ]; then
+-	echo "${SCRIPT_NAME}: You are trying to flash images from a board model that does not"
+-	echo "match the current board you're flashing onto."
+-	exit 1
+-fi
++#if [ ${BOARD_MATCH} = false ]; then
++#	echo "${SCRIPT_NAME}: You are trying to flash images from a board model that does not"
++#	echo "match the current board you're flashing onto."
++#	exit 1
++#fi
+ 
+ # The GPT must be the first partition flashed, so this block ensures that the
+ # GPT exists and is flashed first.
