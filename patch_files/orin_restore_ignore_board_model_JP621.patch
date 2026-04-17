@@ -1,0 +1,21 @@
+diff --git a/tools/backup_restore/nvrestore_partitions.sh b/tools/backup_restore/nvrestore_partitions.sh
+index 4f3c074..70f649a 100755
+--- a/tools/backup_restore/nvrestore_partitions.sh
++++ b/tools/backup_restore/nvrestore_partitions.sh
+@@ -289,11 +289,11 @@ for value in $(grep -v -e '(^ *$|^#)' < "${FILE_NAME}"); do
+ 		fi
+ 	fi
+ done
+-if [ ${BOARD_MATCH} = false ]; then
+-	echo "${SCRIPT_NAME}: You are trying to flash images from a board model that does not"
+-	echo "match the current board you're flashing onto."
+-	exit 1
+-fi
++#if [ ${BOARD_MATCH} = false ]; then
++#	echo "${SCRIPT_NAME}: You are trying to flash images from a board model that does not"
++#	echo "match the current board you're flashing onto."
++#	exit 1
++#fi
+ 
+ declare -A able_to_delete
+ 
